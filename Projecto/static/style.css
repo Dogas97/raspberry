@@ -1,0 +1,86 @@
+body {
+	background-color: lightblue;
+}
+
+.noselect {
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+#painel {
+	background-color: white;
+	border: 5px solid black;
+	border-radius: 15px;
+	text-align: center;
+	margin: auto;
+	width: 646px;
+	height: 264px;
+}
+
+#velocity {
+	display: inline-block;
+	margin: 5px;
+	float:left;
+}
+
+#direction {
+	display: inline-block;
+	margin: 5px;
+	float:left;
+}
+
+#state {
+	display: inline-block;
+	margin: 5px;
+	float:left;
+}
+
+.btn-Down {
+	margin-top: 4px;
+}
+
+button {
+	background-color: #008CBA;
+	border: 3px solid black;
+	color: white;
+	width: 125px;
+	height: 125px;
+	font-size: 40px;
+}
+
+button:disabled {
+	background-color: grey;
+	color: black;
+}
+
+#battery {
+	background-color: green;
+	border: 3px solid black;
+	width: 60px;
+	color: white;
+	margin-bottom: 46px;
+	text-align: left;
+	letter-spacing: 3px;
+}
+
+.btn-extras {
+	border: 3px solid black;
+	border-radius: 50%;
+	color: white;
+	width: 75px;
+	height: 75px;
+	font-size: 20px;
+	margin: 5px;
+}
+
+#btn-Reboot {
+	background-color: yellow;
+}
+
+#btn-TurnOff {
+	background-color: red;
+}

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>RaspServer</title>
+		<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
+		<link rel="shortcut icon" type="image/png" href="https://cdn.iconscout.com/icon/free/png-512/raspberry-pi-555246.png"/>
+	</head>
+	<body id="bg" class="noselect">
+		<h1 align="center">Servidor do Raspberry PI</h1>
+		<div id="painel">
+			<div id="velocity">
+				<button id="btn-More">▲</button>
+				<br>
+				<button class="btn-Down" id="btn-Less" disabled>▼</button>
+			</div>
+			<div id="direction">
+				<button id="btn-Front">▲</button>
+				<br>
+				<button id="btn-Left">◄</button>
+				<button class="btn-Down" id="btn-Back">▼</button>
+				<button id="btn-Right">►</button>
+			</div>
+			<div id="state">
+				<center><div id="battery">{{ value }}</div></center>
+				<br>
+				<button class="btn-extras" id="btn-Reboot"></button>
+				<br>
+				<button class="btn-extras" id="btn-TurnOff"></button>				
+			</div>
+		</div>
+		<p id="txt-Vel-Lin" align="center" style="margin-bottom:0;"></p>
+		<p id="txt-Vel-Ang" align="center" style="margin : 0; padding-top:0;"></p>
+		
+		<script>
+			// Variáveis
+			var bg = document.getElementById('bg')
+			var btn_less = document.getElementById('btn-Less')
+			var btn_more = document.getElementById('btn-More')
+			var btn_back = document.getElementById('btn-Back')
+			var btn_front = document.getElementById('btn-Front')
+			var btn_left = document.getElementById('btn-Left')
+			var btn_right = document.getElementById('btn-Right')
+			var btn_reboot = document.getElementById('btn-Reboot')
+			var btn_turnoff = document.getElementById('btn-TurnOff')
+			
+			var data, state = 'A', ctr_update = 0, update_rate = 10
+			var dir_front_back = 0, ctr_front_back = 0, vel_max_front_back = 50
+			var dir_left_right = 0, ctr_left_right = 0, vel_max_left_right = 150
+			
+			//Eventos
+			bg.addEventListener("keydown", key_down)
+			bg.addEventListener("keyup", key_up)
+			
+			btn_less.addEventListener("click", vel_max_down)
+			btn_more.addEventListener("click", vel_max_up)
+			
+			btn_back.addEventListener("mousedown", press_back)
+			btn_back.addEventListener("mouseup", not_press_front_back)
+			btn_back.addEventListener("mouseleave", not_press_front_back)
+			btn_back.addEventListener("touchstart", press_back)
+			btn_back.addEventListener("touchend", not_press_front_back)
+						
+			btn_front.addEventListener("mousedown", press_front)
+			btn_front.addEventListener("mouseup", not_press_front_back)
+			btn_front.addEventListener("mouseleave", not_press_front_back)
+			btn_front.addEventListener("touchstart", press_front)
+			btn_front.addEventListener("touchend", not_press_front_back)
+						
+			btn_left.addEventListener("mousedown", press_left)
+			btn_left.addEventListener("mouseup", not_press_left_right)
+			btn_left.addEventListener("mouseleave", not_press_left_right)
+			btn_left.addEventListener("touchstart", press_left)
+			btn_left.addEventListener("touchend", not_press_left_right)
+
+			btn_right.addEventListener("mousedown", press_right)
+			btn_right.addEventListener("mouseup", not_press_left_right)
+			btn_right.addEventListener("mouseleave", not_press_left_right)
+			btn_right.addEventListener("touchstart", press_right)
+			btn_right.addEventListener("touchend", not_press_left_right)
+			
+			btn_reboot.addEventListener("click", reboot)
+			btn_turnoff.addEventListener("click", shutdown)
+			
+			//Funções Click
+			function vel_max_up() {
+				if (vel_max_front_back < 250) {
+					vel_max_front_back += 50
+					btn_less.disabled = false
+				}
+				if (vel_max_front_back == 250)
+					btn_more.disabled = true
+			}
+			function vel_max_down() {
+				if (vel_max_front_back > 50) {
+					vel_max_front_back -= 50
+					btn_more.disabled = false
+				}
+				if (vel_max_front_back == 50)
+					btn_less.disabled = true
+			}
+			function reboot() {
+				state = 'R'
+			}
+			function shutdown() {
+				state = 'S'
+			}
+			
+			// Funções de "Press and Hold"
+			function not_press_front_back(e) {
+				dir_front_back = 0
+			}
+			function not_press_left_right(e) {
+				dir_left_right = 0
+			}
+			function press_back(e) {
+				dir_front_back = -1
+			}
+			function press_front(e) {
+				dir_front_back = 1
+			}
+			function press_left(e) {
+				dir_left_right = -1
+			}
+			function press_right(e) {
+				dir_left_right = 1
+			}
+			function key_down(e) {
+				if (e.keyCode == 37)
+					dir_left_right = -1
+				if (e.keyCode == 38)
+					dir_front_back = 1
+				if (e.keyCode == 39)
+					dir_left_right = 1
+				if (e.keyCode == 40)
+					dir_front_back = -1
+			}
+			function key_up(e) {
+				if (e.keyCode == 38 || e.keyCode == 40)
+					dir_front_back = 0
+				if (e.keyCode == 37 || e.keyCode == 39)
+					dir_left_right = 0
+			}
+			
+			function loop() {
+				ctr_update ++
+				if (ctr_update == update_rate) {
+					ctr_update = 0
+					sendString()
+				}
+				
+				if (dir_front_back == 0 && ctr_front_back > 0)
+					ctr_front_back --
+				else if (dir_front_back == 0 && ctr_front_back < 0)
+					ctr_front_back ++
+				else if (dir_front_back == 1 && ctr_front_back < vel_max_front_back)
+					ctr_front_back += 2
+				else if (dir_front_back == -1 && ctr_front_back > -vel_max_front_back)
+					ctr_front_back -= 2
+				if (dir_left_right == 0 && ctr_left_right > 0)
+					ctr_left_right --
+				else if (dir_left_right == 0 && ctr_left_right < 0)
+					ctr_left_right ++
+				else if (dir_left_right == 1 && ctr_left_right < vel_max_left_right)
+					ctr_left_right += 2
+				else if (dir_left_right == -1 && ctr_left_right > -vel_max_left_right)
+					ctr_left_right -= 2
+				requestAnimationFrame(loop)
+			}
+			requestAnimationFrame(loop)
+			
+			function updateLabels() {
+				document.getElementById('txt-Vel-Lin').innerHTML = '<b>Velocidade Linear: </b>' + Math.trunc(ctr_front_back/50) + " // ±" + vel_max_front_back/50
+				document.getElementById('txt-Vel-Ang').innerHTML = '<b>Velocidade Angular: </b>' + Math.trunc(ctr_left_right/50) + " // ±3"
+			}
+			
+			function makeString() {
+				updateLabels()
+				//Algarismo 1			FIXO
+				data = 'S'
+				//Algarismo 2			VELOCIDADE
+				data += String.fromCharCode(70 + Math.trunc(ctr_front_back/50))
+				//Algarismo 3			CURVATURA
+				data += String.fromCharCode(70 + Math.trunc(ctr_left_right/50))
+				//Algarismo 4			R - Reboot  |  S - Shutdown
+				data += state
+				state = 'A'
+				//Algarismo 5			FIXO
+				data += 'A'
+				//Algarismo 6			Alterna entre A e B
+				data += 'A'
+				return data
+			}
+
+			function sendString() {
+				const body = new FormData()
+				body.append("stringData", makeString())
+				a = fetch("/receive", {method: "POST", body, credentials: "include"})
+			}
+		</script>
+	</body>
+</html>
