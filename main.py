@@ -7,8 +7,8 @@ logging.getLogger('werkzeug').disabled = True
 os.environ['WERKZEUG_RUN_MAIN'] = 'true'
 
 # Caminhos para os dados
-pathD = "/home/pi/Desktop/Projecto/data/data.txt"
-pathR = "/home/pi/Desktop/Projecto/data_robot/data.txt"
+pathD = "/home/pi/raspberry-master/data/data.txt"
+pathR = "/home/pi/raspberry-master/data_robot/data.txt"
 
 # Retorna a ultima Data guardada
 def readLastData():

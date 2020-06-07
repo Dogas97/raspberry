@@ -1,4 +1,0 @@
-[Desktop Entry]
-Exec=lxterminal -e "sudo python /home/pi/Desktop/Projecto/main.py"
-Type=Application
-StartupNotify=true
